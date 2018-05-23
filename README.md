@@ -37,7 +37,7 @@ I did not have much time to benchmark this approach, but it seemed to be limited
 - If the discretization of the action space is very fine, then we tend to over-estimate the Q-values due to the max operation (though double Q-Networks help with this)
 - Since models are learned sequentially and calling each other, model errors tend to propagate (this could only be mitigated at a cost of calling models less frequently, i.e. updating the policy less frequently)
 
-## Approach 2: Policy Network
+## Approach 2: Deterministic Policy Network
 
 During the implementation of the DP approach, I actually came to see a **model-based** alternative which seemed more optimal. Indeed I understood that all operations implemented in the simulate_timestep() function of the test engine could be implemented into a DL framework such as Keras. 
 
@@ -45,10 +45,11 @@ To clarify, this simulate_timestep() function was the "physical engine" called a
 - it computed an effective battery charge given the proposed battery charge and the battery constraints
 - it then computed the energy taken from the grid in both cases with and without battery
 - it then computed the money spent in both cases with and without battery
+- this finally gave the reward
 
-Being able to implement this function directly into the model architecture meant being able to directly optimize the reward with respect to the policy network. It was a strong specificity that one cannot find in usual problems. Indeed most implementations of policy iteration use techniques such as Reinforce for training (see e.g. http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Teaching_files/pg.pdf), since the simulation / sampling process stays "exterior" to the model architecture.
+Being able to implement this function directly into the model architecture meant being able to directly optimize the return with respect to a **deterministic policy network**. It was a strong specificity that one cannot find in usual problems. Indeed the simulation / sampling process is usually "exterior" to the model architecture, and policy iteration is implemented with stochastic policies and high variance algorithms such as Reinforce for training (see e.g. http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Teaching_files/pg.pdf).
 
-So I coded a policy network, which directly acted as the battery controller and gave in output the proposed battery charge. On top of this policy network, further layers (without any parameters to learn) performed the "simulation work". 
+So I coded a deterministic policy network, which directly acted as the battery controller and gave in output the proposed battery charge. On top of this policy network, further layers (without any parameters to learn) performed the "simulation work". 
 
 Finally the loss of this global architecture was set as the competition score: `money_saved / abs(money_spent_without_battery)` (the denominator had actually no influence on the optimal policy for a given simulation, but it enabled to prioritize learning to save money when the factor was small). In this way, **Keras's optimizer was directly doing the job of minimizing the simulation score**.
 
@@ -58,7 +59,7 @@ To solve this, I ended up with a solution with 6 outputs of the policy network:
 - 3 sigmoid outputs giving the proposed position of the charge w.r.t. different ranges:
     - 1 for the allowed range [0,1] coming from the battery capacity
     - 1 for the allowed range coming from the current charge and the power limits
-    - 1 for the combination of the 2 previous ranges)
+    - 1 for the combination of the 2 previous ranges
 - 3 softmax outputs to weight the proposed charge resulting from each of the 3 sigmoid outputs
 - This enabled to make sure that the gradient would never fully "die", and also gave a lot of degrees of freedom for the system not to get stuck in local minima
 
