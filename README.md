@@ -39,7 +39,7 @@ I did not have much time to benchmark this approach, but it seemed to be limited
 
 ## Approach 2: Deterministic Policy Network
 
-During the implementation of the DP approach, I actually came to see a **model-based** alternative which seemed more optimal. Indeed I understood that all operations implemented in the simulate_timestep() function of the test engine could be implemented into a DL framework such as Keras. 
+During the implementation of the DP approach, I actually came to see a model-based alternative which seemed more optimal. Indeed I understood that all operations implemented in the simulate_timestep() function of the test engine could be implemented into a DL framework such as Keras. 
 
 To clarify, this simulate_timestep() function was the "physical engine" called at each time step of the simulation:
 - it computed an effective battery charge given the proposed battery charge and the battery constraints
@@ -47,7 +47,7 @@ To clarify, this simulate_timestep() function was the "physical engine" called a
 - it then computed the money spent in both cases with and without battery
 - this finally gave the reward
 
-Being able to implement this function directly into the model architecture meant being able to directly optimize the return with respect to a **deterministic policy network**. It was a strong specificity that one cannot find in usual problems. Indeed the simulation / sampling process is usually "exterior" to the model architecture, and policy iteration is implemented with stochastic policies and high variance algorithms such as Reinforce for training (see e.g. http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Teaching_files/pg.pdf).
+Being able to implement this function directly into the model architecture meant being able to directly optimize the return with respect to a deterministic policy network. It was a strong specificity that one cannot find in usual problems. Indeed the simulation / sampling process is usually "exterior" to the model architecture, and policy iteration is implemented with stochastic policies and high variance algorithms such as Reinforce for training (see e.g. http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Teaching_files/pg.pdf).
 
 So I coded a deterministic policy network, which directly acted as the battery controller and gave in output the proposed battery charge. On top of this policy network, further layers (without any parameters to learn) performed the "simulation work". 
 
