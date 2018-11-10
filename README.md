@@ -66,28 +66,20 @@ To solve this, I ended up with a solution with 6 outputs of the policy network:
 Here's a list of other choices:
 - Due to the strong constraints on computing time, the policy network was only applied every 4 time steps (= 1 hour), and the policy network gave its 6 outputs for each of the 4 following time steps
 - For the same reason, I did not used any Convolutional layers in the policy network, but only Dense layers
-- I used the same Data Augmentation as for Dynamic Programming, consisting in random shifts of the pv series with respect to the load and price series
+- Since I realized that the overfitting regime was reached very quickly, I implemented a stronger Data Augmentation, consisting not only of random shifts of the pv series by a random integer number of days, but a pure random shift of the pv series inside the same period_id (this means that the corresponding time of the day could be asynchronized between pv, load and price series)
 - I merged train/ and submit/ data in the final training
 - The total number of time steps learned at the same time in the policy network was a tradeoff between the increase in computation time, and the potential benefit of having a longer policy horizon (it was set to 6 days in final results, but I'm not sure whether this choice gave a significant gain compared to shorter horizons)
 
+
 ## Results
 
-Overall, the whole approach ended up at position 6, with an average simulation score of -19.5 (the winning approach reaching an average score of -20.1).
+Example of results on site_id = 12, period_id = 5, battery_id = 2:
 
-Taking some time for testing after the competition, I realized that my submission actually had an overfitting problem. Indeed, when training only on train/ and keeping submit/ as validation data, the overfitting regime was reached way before the moment I had stopped the training for the submitted models.
+![img_results](./output/policy/img/simulation_s12_b2_p5.png)
 
-To cope with this, I implemented afterwards a stronger Data Augmentation, consisting not only of random shifts of the pv series by a random integer number of days, but a pure random shift of the pv series inside the same period_id (this means that the corresponding time of the day could be asynchronized between pv, load and price series).
+Example of results on site_id = 32, period_id = 1, battery_id = 2:
 
-Another way to cope with this would be to regularize the network, for example with Dropout layers.
-
-
-Example of results on site_id = 29, period_id = 7, battery_id = 2:
-
-![img_results](./output/policy/img/results_site_id=29_period_id=7_battery_id=2.png)
-
-Example of results on site_id = 32, period_id = 3, battery_id = 2:
-
-![img_results](./output/policy/img/results_site_id=32_period_id=3_battery_id=2.png)
+![img_results](./output/policy/img/simulation_s32_b2_p1.png)
 
 ## How to run the code
 
