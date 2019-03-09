@@ -47,9 +47,9 @@ To clarify, this simulate_timestep() function was the "physical engine" called a
 - it then computed the money spent in both cases with and without battery
 - this finally gave the reward
 
-Being able to implement this function directly into the model architecture meant being able to directly optimize the return with respect to a deterministic policy network. It was a strong specificity that one cannot find in usual problems. Indeed the simulation / sampling process is usually "exterior" to the model architecture, and policy iteration is implemented with stochastic policies and high variance algorithms such as Reinforce for training (see e.g. http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Teaching_files/pg.pdf).
+Being able to implement this "physical engine" directly into the model architecture meant being able to directly optimize the return with respect to a deterministic policy network. It was a strong specificity that one cannot find in usual problems. Indeed the environment is usually exterior to the model architecture, and policy iteration is implemented with stochastic policies and high variance algorithms such as Reinforce for training (see e.g. http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Teaching_files/pg.pdf).
 
-So I coded a deterministic policy network, which directly acted as the battery controller and gave in output the proposed battery charge. On top of this policy network, further layers (without any parameters to learn) performed the "simulation work". 
+So I coded a deterministic policy network, which directly acted as the battery controller and gave in output the proposed battery charge. On top of this policy network, further layers (without any parameters to learn) performed the "physical engine". 
 
 Finally the loss of this global architecture was set as the competition score: `money_saved / abs(money_spent_without_battery)` (the denominator had actually no influence on the optimal policy for a given simulation, but it enabled to prioritize learning to save money when the factor was small). In this way, **Keras's optimizer was directly doing the job of minimizing the simulation score**.
 
