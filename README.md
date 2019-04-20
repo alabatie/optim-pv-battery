@@ -47,11 +47,9 @@ To clarify, this simulate_timestep() function was the "physical engine" called a
 - it then computed the money spent in both cases with and without battery
 - this finally gave the reward
 
-Being able to implement this "physical engine" directly into the model architecture meant being able to directly optimize the return with respect to a deterministic policy network. It was a strong specificity that one cannot find in usual problems. Indeed the environment is usually exterior to the model architecture, and policy iteration is implemented with stochastic policies and high variance algorithms such as Reinforce for training (see e.g. http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Teaching_files/pg.pdf).
+My approach was thus to code a deterministic policy network, which acted as the battery controller and gave in output the proposed battery charge. On top of this policy network, further layers (without any parameters to learn) performed the "physical engine". 
 
-So I coded a deterministic policy network, which directly acted as the battery controller and gave in output the proposed battery charge. On top of this policy network, further layers (without any parameters to learn) performed the "physical engine". 
-
-Finally the loss of this global architecture was set as the competition score: `money_saved / abs(money_spent_without_battery)` (the denominator had actually no influence on the optimal policy for a given simulation, but it enabled to prioritize learning to save money when the factor was small). In this way, **Keras's optimizer was directly doing the job of minimizing the simulation score**.
+The loss of this global architecture was simply set as the competition score: `money_saved / abs(money_spent_without_battery)` (the denominator had actually no influence on the optimal policy for a given simulation, but it enabled to prioritize learning to save money when the factor was small). In this way, **Keras's optimizer was directly doing the job of minimizing the simulation score**.
 
 The most important trick to make this approach work was related to the policy network output. Indeed, since the battery charge was bounded in its allowed range, any exploration of the policy network outside of this allowed range would lead to zero gradients. This was analogous to the "dying ReLU" issue, but even more problematic since it would affect the whole network.
 
